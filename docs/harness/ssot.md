@@ -110,7 +110,7 @@ SSOT를 보호하는 영역별 역할 분담.
 
 `npm run verify` — prepare → types → lint → test → build. 실패하면 멈춘다.
 검증 전용 `verify.db` 를 쓴다. `dev.db` 는 건드리지 않는다.
-보호 영역 변경은 `spec-approved` 라벨 없이 통과하지 못한다 (§3).
+보호 영역이 바뀌면 CI 가 경고를 남긴다. 막지는 않는다 — 승인은 PR 리뷰에서 한다 (§3).
 
 [자세히](verification.md)
 

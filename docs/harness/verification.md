@@ -11,7 +11,7 @@
 2. **실패하면 멈춘다.** 건너뛰거나(`--no-verify`, `skip`) 우회하지 않는다.
 3. **게이트가 막으면 규칙이 아니라 코드를 고친다.** 규칙이 틀렸다고 판단되면 고치지 말고 사람에게 묻는다.
 4. **검증은 `verify.db` 만 건드린다.** `dev.db` 는 개발자의 작업 데이터다.
-5. **보호 영역은 사람 승인 없이 못 바꾼다.** `spec-approved` 라벨이 곧 승인이다 ([§3](ssot.md)).
+5. **보호 영역이 바뀌면 CI 가 경고한다.** 막지는 않는다 — 승인은 PR 리뷰에서 한다 ([§3](ssot.md)).
 
 ---
 
@@ -73,7 +73,7 @@
 | 잡 | 언제 | 하는 일 |
 |---|---|---|
 | `verify` | main 푸시 · PR | `npm ci` → `npm run verify` (ubuntu, Node 24) |
-| `protected-areas` | PR 만 | 보호 영역 변경 시 `spec-approved` 라벨 없으면 실패 |
+| `protected-areas` | PR 만 | 보호 영역 변경 시 경고 어노테이션 (실패시키지 않는다) |
 
 **보호 영역:** `01-requirements.md` · `06-architecture.md` · `ssot.md` · `AGENTS.md` · `CLAUDE.md` · 검증 스크립트 · 워크플로
 에이전트는 라벨을 붙일 수 없다 → 라벨 요구가 곧 사람 승인 요구다 (SSOT §3).

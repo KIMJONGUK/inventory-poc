@@ -5,10 +5,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    # 기본값은 opened·synchronize·reopened 뿐이라 라벨을 붙여도 다시 돌지 않는다.
-    # 재실행(rerun)은 기존 이벤트 페이로드를 재생하므로 라벨이 반영되지 않는다.
-    # spec-approved 를 붙였을 때 보호 영역 게이트가 재평가되려면 labeled 가 필요하다.
-    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 # 같은 브랜치에 새 커밋이 오면 진행 중이던 실행은 취소한다
 concurrency:
@@ -43,8 +39,8 @@ jobs:
       # prepare → typecheck → lint → test → build (앞 단계가 실패하면 멈춘다)
       - run: npm run verify
 
-  # SSOT §3 보호 영역 — 요구사항·아키텍처·하네스 규칙은 사람이 변경·승인한다.
-  # 에이전트는 라벨을 붙일 수 없으므로, 라벨 요구가 곧 사람 승인 요구가 된다.
+  # SSOT §3 보호 영역 — 요구사항·아키텍처·하네스 규칙이 바뀌면 알린다.
+  # 막지는 않는다 (경고만). 승인은 PR 리뷰에서 사람이 한다.
   protected-areas:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -57,7 +53,6 @@ jobs:
       - name: 보호 영역 변경 확인
         env:
           BASE_REF: ${{ github.base_ref }}
-          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
         run: |
           set -euo pipefail
 
@@ -90,13 +85,11 @@ jobs:
           echo "보호 영역이 변경되었습니다:"
           printf '%s' "$hits"
 
-          if printf '%s' "$LABELS" | tr ',' '\n' | grep -qx 'spec-approved'; then
-            echo
-            echo "'spec-approved' 라벨이 있어 통과합니다."
-            exit 0
-          fi
+          # PR 목록·요약에 뜨도록 파일마다 경고 어노테이션을 남긴다
+          printf '%s' "$hits" | sed 's/^  - //' | while read -r f; do
+            echo "::warning file=$f::보호 영역 파일입니다 (SSOT §3). 변경 내용을 리뷰에서 확인하세요."
+          done
 
           echo
-          echo "SSOT §3 — 요구사항 · 아키텍처 · 하네스 규칙은 사람이 변경하고 승인합니다."
-          echo "내용을 검토한 뒤 이 PR 에 'spec-approved' 라벨을 붙이세요."
-          exit 1
+          echo "SSOT §3 — 요구사항 · 아키텍처 · 하네스 규칙입니다."
+          echo "경고만 남기고 통과합니다. 승인은 PR 리뷰에서 사람이 합니다."

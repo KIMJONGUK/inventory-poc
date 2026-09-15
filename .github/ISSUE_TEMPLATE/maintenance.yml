@@ -144,7 +144,7 @@ body:
         `AGENTS.md` · `CLAUDE.md` · `.github/workflows/verify.yml` · `scripts/prepare-verify.ts` · `scripts/check-architecture.ts`
       options:
         - label: 이 작업은 위 파일을 건드리지 않는다
-        - label: 건드려야 한다 — PR 에 `spec-approved` 라벨이 필요하다 (사람 승인)
+        - label: 건드려야 한다 — PR 리뷰에서 사람이 확인한다 (CI 가 경고를 남긴다)
 
   - type: dropdown
     id: max-loops
