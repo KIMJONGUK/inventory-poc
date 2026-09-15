@@ -1,0 +1,181 @@
+name: 유지보수 작업
+description: 에이전트가 작업을 시작할 수 있는 6개 항목을 채운다
+title: "[유지보수] "
+labels: ["maintenance"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        6개 항목이 곧 계약서다. 하나라도 비면 에이전트는 시작하지 않는다.
+        요구사항·아키텍처 자체를 바꿔야 하면 여기 쓰지 말고 사람에게 먼저 묻는다 (SSOT §3).
+
+        ### 종료 조건은 "판정되는 명제"로 쓴다
+
+        참/거짓이 기계적으로 갈려야 한다. **고정 숫자·고정 날짜는 종료 조건에 쓰지 않는다** —
+        시드가 바뀌거나 내일 돌리면 깨진다. 숫자는 재현 입력(1번)에만 쓰고, 종료 조건은 **관계식**으로 쓴다.
+
+        | 축 | 되는 예 | 안 되는 예 |
+        |---|---|---|
+        | 형태 | 관계식 · 불변식 | 그 순간의 관찰값 |
+        | 수량 | `파손 = 반출 − 판매 − 시식 − 반품` | `파손이 12 로 나온다` |
+        | 날짜 | `today() + 7` 이내면 임박 | `2026-09-22 이전이면 임박` |
+        | 경계 | `경계일(D+7) 당일은 임박에 포함` | `일주일쯤 남으면 임박` |
+        | 판정 | 명령어가 판정 | 화면에서 확인 |
+        | 불변 | `내부 이동 전후 총재고 불변` | `재고가 맞게 유지됨` |
+
+        날짜·기간은 `src/lib/date.ts` 의 `today()` · `addDays()` · `daysUntil()` 로 쓴다.
+        테스트에 `new Date('2026-…')` 를 박지 않는다 (순수 함수의 입력 픽스처는 예외).
+
+        <details><summary>다 채운 예시 보기</summary>
+
+        **배경** — 팝업 정산에서 시식 칸을 비우면 잔량이 전부 파손으로 잡힌다.
+        재현 입력: 반출 20 · 판매 8 · 시식 공백 → 파손 12 가 나온다. (`docs/03-scenarios.md` §팝업 정산)
+
+        **변경할 내용** — `src/lib/popup/settle.ts` 의 `settlePopup()` 역산 분기 1곳.
+
+        **종료 조건**
+        - 시식이 공백이면 `0` 으로 읽는다 — 미입력과 0 의 결과가 같다
+        - 어떤 입력에서도 `파손 = 반출 − 판매 − 시식 − 반품` 이 성립한다
+        - 위 식이 음수가 되는 입력은 저장되지 않고 에러를 던진다
+        - 정산 1건이 만드는 Movement 수 = 0 이 아닌 사유 항목 수
+
+        **기계 검증** — `npx vitest run tests/popup-settle.test.ts -t "시식 미입력"` · `npm run verify` exit 0.
+
+        **건드리면 안 되는 것** — 스키마·마이그레이션 없음. FEFO/LEFO 규칙 미변경.
+
+        **루프** — 2회, 소진 시 사람에게.
+        </details>
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 1. 배경 — 왜 필요한가
+      description: |
+        **여기에만 구체적인 숫자를 쓴다.** 재현 입력과 그때의 현재 값 → 기대 값.
+        되는 예: `반출 20·판매 8·시식 공백 → 파손 12 (기대 0)`
+        안 되는 예: `정산이 이상하다`
+      placeholder: |
+        현상: 팝업 정산에서 시식을 비우면 잔량이 전부 파손으로 집계된다
+        재현 입력: 반출 20 · 판매 8 · 시식 공백
+        현재 값: 파손 12 / 기대 값: 파손 0
+        경로: 팝업 상세 → 정산 → 저장
+        근거: docs/03-scenarios.md §팝업 정산
+    validations:
+      required: true
+
+  - type: textarea
+    id: change
+    attributes:
+      label: 2. 변경할 내용 — 무엇을 수정하는가
+      description: |
+        파일·함수 단위로. 아직 모르면 `조사 후 확정` 이라 쓰고 범위 상한만 적는다.
+        되는 예: `src/lib/popup/settle.ts — settlePopup() 역산 분기`
+        안 되는 예: `정산 로직 개선`
+      placeholder: |
+        - src/lib/popup/settle.ts — settlePopup() 역산 분기 1곳
+        - tests/popup-settle.test.ts — 케이스 추가
+        - 파일 3개 이내 예상
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: 3. 종료 조건 — 무엇이 참이면 완료인가
+      description: |
+        한 줄 = 판정 가능한 명제 하나. **고정 숫자·고정 날짜 금지**, 관계식으로 쓴다.
+        되는 예: `어떤 입력에서도 파손 = 반출 − 판매 − 시식 − 반품`
+        안 되는 예: `반출 20·판매 8 일 때 파손이 0 이다` (그 한 케이스만 맞으면 통과해 버린다)
+        되는 예: `today() + 7 이내 로트는 임박으로 표시된다 (경계일 당일 포함)`
+        안 되는 예: `2026-09-22 이전 로트는 임박으로 표시된다`
+      value: |
+        - [ ] 정상: 
+        - [ ] 경계: (0 · 공백 · 동률 · 경계일 당일 중 해당하는 것)
+        - [ ] 거부: 
+        - [ ] 불변: 고치기 전에도 참이었고 고친 뒤에도 참이어야 하는 것
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: 4. 기계 검증 — 어떤 테스트가 판정하는가
+      description: |
+        3번의 각 줄에 명령어 하나를 붙인다. 붙일 명령이 없는 줄은 종료 조건이 아니다 — 다시 쓴다.
+        테스트는 `prisma/verify.db` 를 쓴다. 단독 실행 전 `npm run verify:prepare` 를 먼저 돌린다.
+        기존 테스트 파일: `tests/fefo.test.ts` · `tests/popup-settle.test.ts` · `tests/stock-invariant.test.ts`
+        되는 예: `npx vitest run tests/popup-settle.test.ts -t "시식 미입력"`
+        안 되는 예: `테스트 통과` · `화면에서 확인`
+      value: |
+        | 종료 조건 | 명령 | 통과 기준 |
+        |---|---|---|
+        | 정상 | `npx vitest run tests/           .test.ts -t "     "` | 통과 |
+        | 경계 | `npx vitest run tests/           .test.ts -t "     "` | 통과 |
+        | 거부 | `npx vitest run tests/           .test.ts -t "     "` | 지정 에러를 던진다 |
+        | 불변 | `npx vitest run tests/stock-invariant.test.ts` | 통과 |
+        | 전체 | `npm run verify` | exit 0 |
+
+        - 테스트 안에서 날짜는 `today()` / `addDays()` 로 만든다 (고정 날짜 금지)
+        - 테스트는 자기가 만든 데이터만 지우고 끝낸다 (시드 오염 금지, 반복 실행해도 같은 결과)
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: 5. 건드리면 안 되는 것 — 변경 경계는 어디인가
+      description: |
+        이 Issue 밖의 파일·동작. 비워도 아래 보호 영역은 항상 적용된다.
+        되는 예: `prisma/schema.prisma 변경 없음 — 마이그레이션 금지`
+        안 되는 예: `관련 없는 건 건드리지 말 것`
+      placeholder: |
+        - prisma/schema.prisma 변경 없음 (마이그레이션 금지)
+        - FEFO/LEFO 배분 규칙 자체는 유지
+        - 기존 테스트의 기대값 수정 금지 (실패하면 코드를 고친다)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: protected
+    attributes:
+      label: 보호 영역 (SSOT §3)
+      description: |
+        `docs/01-requirements.md` · `docs/06-architecture.md` · `docs/harness/ssot.md` ·
+        `AGENTS.md` · `CLAUDE.md` · `.github/workflows/verify.yml` · `scripts/prepare-verify.ts` · `scripts/check-architecture.ts`
+      options:
+        - label: 이 작업은 위 파일을 건드리지 않는다
+        - label: 건드려야 한다 — PR 에 `spec-approved` 라벨이 필요하다 (사람 승인)
+
+  - type: dropdown
+    id: max-loops
+    attributes:
+      label: 6. 구현 루프 최대 횟수 — 몇 번까지 재시도하는가
+      description: 1회 = 수정 → `npm run verify` → 실패 판독. 이 횟수를 넘기면 코드를 더 고치지 않는다.
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+      default: 1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: on-exhausted
+    attributes:
+      label: 루프를 소진하면 무엇을 하는가
+      options:
+        - "멈추고 실패 로그와 함께 사람에게 넘긴다"
+        - "지금까지 통과한 부분만 Draft PR 로 올리고 멈춘다"
+        - "작업 내용을 되돌리고 멈춘다"
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 참고 (선택)
+      description: 관련 Issue·PR·스크린샷.
+    validations:
+      required: false
