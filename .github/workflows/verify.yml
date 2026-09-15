@@ -1,0 +1,98 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 같은 브랜치에 새 커밋이 오면 진행 중이던 실행은 취소한다
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # .env 는 커밋하지 않으므로 CI 에서 직접 준다.
+      # verify:prepare 와 vitest 는 각자 verify.db 로 덮어쓰고,
+      # 여기 값은 prisma CLI 가 설정을 읽을 때 쓰인다.
+      DATABASE_URL: file:./prisma/dev.db
+      # 실제 비밀값이 아니다 — CI 에서 session.ts 의 필수 검사를 통과시키기 위한 더미
+      SESSION_SECRET: ci-dummy-session-secret-not-used-in-production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # prepare → typecheck → lint → test → build (앞 단계가 실패하면 멈춘다)
+      - run: npm run verify
+
+  # SSOT §3 보호 영역 — 요구사항·아키텍처·하네스 규칙은 사람이 변경·승인한다.
+  # 에이전트는 라벨을 붙일 수 없으므로, 라벨 요구가 곧 사람 승인 요구가 된다.
+  protected-areas:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 보호 영역 변경 확인
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          set -euo pipefail
+
+          PROTECTED='
+          docs/01-requirements.md
+          docs/06-architecture.md
+          docs/harness/ssot.md
+          AGENTS.md
+          CLAUDE.md
+          .github/workflows/verify.yml
+          scripts/prepare-verify.ts
+          scripts/check-architecture.ts
+          '
+
+          base=$(git merge-base "origin/$BASE_REF" HEAD)
+          changed=$(git diff --name-only "$base" HEAD)
+
+          hits=''
+          for path in $PROTECTED; do
+            if printf '%s\n' "$changed" | grep -qxF "$path"; then
+              hits="$hits  - $path"$'\n'
+            fi
+          done
+
+          if [ -z "$hits" ]; then
+            echo "보호 영역 변경 없음"
+            exit 0
+          fi
+
+          echo "보호 영역이 변경되었습니다:"
+          printf '%s' "$hits"
+
+          if printf '%s' "$LABELS" | tr ',' '\n' | grep -qx 'spec-approved'; then
+            echo
+            echo "'spec-approved' 라벨이 있어 통과합니다."
+            exit 0
+          fi
+
+          echo
+          echo "SSOT §3 — 요구사항 · 아키텍처 · 하네스 규칙은 사람이 변경하고 승인합니다."
+          echo "내용을 검토한 뒤 이 PR 에 'spec-approved' 라벨을 붙이세요."
+          exit 1

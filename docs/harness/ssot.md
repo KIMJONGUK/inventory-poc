@@ -78,18 +78,20 @@ SSOT를 보호하는 영역별 역할 분담.
 
 ---
 
-## 4. 검증
-**상태:** 미정 (구현 중 채우기)
+## 5. 검증
 
-[추후](../harness/SSOT.md)
+`npm run verify` — prepare → types → lint → test → build. 실패하면 멈춘다.
+검증 전용 `verify.db` 를 쓴다. `dev.db` 는 건드리지 않는다.
+보호 영역 변경은 `spec-approved` 라벨 없이 통과하지 못한다 (§3).
+
+[자세히](verification.md)
 
 ---
 
-## 5. 구현루프
+## 6. 구현루프
 **상태:** 미정 (구현 중 채우기)
 
-[추후](../harness/SSOT.md)
-
+[추후](ssot.md)
 ---
 
 ## 참고
