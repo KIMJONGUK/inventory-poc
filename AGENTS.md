@@ -4,7 +4,7 @@
 
 ## 읽기 규칙
 
-1. 시작은 항상 `docs/harness/SSOT.md` **하나만** — 요구사항·아키텍처 핵심 판단표
+1. 시작은 항상 `docs/harness/ssot.md` **하나만** — 요구사항·아키텍처 핵심 판단표
 2. SSOT로 답이 나오면 **거기서 멈춘다**
 3. 부족하면 라우팅 표에서 **1차 문서 1개만** 연다
 4. 그래도 부족할 때만 **확장 열 순서대로 한 번에 하나씩** 넓힌다
@@ -18,6 +18,7 @@
 | 화면 흐름 · 이 단계에서 사용자가 뭘 보나 | `docs/03-scenarios.md` | 01-requirements → 05-design |
 | 데이터 모델 · 코드 위치 · 트랜잭션 · 동시성 | `docs/06-architecture.md` | HANDOVER → 01-requirements |
 | UI 스펙 · 색 · 컴포넌트 · 반응형 | `docs/05-design.md` | 03-scenarios |
+| 검증 · 테스트 · CI · 무엇이 자동으로 지켜지나 | `docs/harness/verification.md` | 07-plan §2 → 06-architecture §9 |
 | 무엇부터 구현 · 마일스톤 · QA 순서 | `docs/07-plan.md` | 01-requirements §7 |
 | 이미 정해진 것 · 왜 이 방향인가 · 함정 | `docs/HANDOVER.md` | 06-architecture |
 | 사용자가 누구 · 왜 이 기능이 필요한가 | `docs/02-personas.md` | 04-engagement |
@@ -26,7 +27,7 @@
 
 ## 멈춤 조건 (사람에게 넘긴다)
 
-- **문서끼리 충돌** → `docs/harness/SSOT.md` §정책 확인 → 해소 안 되면 **구현하지 말고 사람에게 묻는다**
+- **문서끼리 충돌** → `docs/harness/ssot.md` §정책 확인 → 해소 안 되면 **구현하지 말고 사람에게 묻는다**
 - **요구사항·아키텍처를 바꿔야 함** → AI는 읽기만. **변경은 사람 승인** (SSOT §보호 영역)
 - **SSOT에 "미정"으로 적힌 항목** → 임의로 정하지 않는다
 - **라우팅 표에 없는 질문** → 어느 영역인지 사람에게 먼저 확인한다
