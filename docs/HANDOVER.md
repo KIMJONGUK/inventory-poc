@@ -149,7 +149,7 @@ AI 는 **행동**(무엇을 고치고 언제 넘길까)을 정한다. AI 가 기
 | **Next.js 16** | `middleware.ts`가 폐기되어 **`src/proxy.ts`**를 쓴다 (export 이름도 `proxy`) |
 | **Prisma 7** | 클라이언트를 `@/generated/prisma/client`에서 가져온다. 드라이버 어댑터(`@prisma/adapter-better-sqlite3`) 필수. 설정은 `prisma.config.ts` |
 | **`AGENTS.md` / `CLAUDE.md`** | 지금은 **문서 진입점이라 커밋한다.** `npm run dev` 가 자기 규칙 블록을 `AGENTS.md` 끝에 자동으로 덧붙이므로, 지우지 말고 그 블록째 커밋해야 트리가 깨끗하다 |
-| **보호 영역 경고의 사각지대** | `verify.yml` 의 `protected-areas` 잡은 **PR 에서만** 돈다. main 에 직접 푸시하면 경고가 아예 안 뜬다 — 2026-09-16 세션에서 `ssot.md` 를 6번 고쳤지만 경고는 0회였다 |
+| **보호 영역 경고의 사각지대** | `verify.yml` 의 `protected-areas` 잡은 **PR 에서만** 돈다. main 에 직접 푸시하면 경고가 아예 안 뜬다 — 2026-09-16 세션에서 `ssot.md` 를 6번 고쳤지만 경고는 0회였다. `push` 에서도 돌리는 안은 검토 후 **기각** — 루프 밖 변경은 사람이 직접 고치는 것이고, diff 는 터미널에서 본다 |
 | **테스트가 DB를 공유** | `tests/`는 `prisma/dev.db`를 그대로 쓴다. 자기가 만든 데이터만 앞뒤로 지우도록 되어 있으니, 새 테스트도 같은 방식을 지킬 것 |
 | **날짜** | 유통기한은 시각 없는 날짜다. 반드시 `lib/date.ts`의 `dateOnly()`를 통과시킨다 (UTC 자정 고정) |
 
@@ -161,10 +161,10 @@ AI 는 **행동**(무엇을 고치고 언제 넘길까)을 정한다. AI 가 기
 - **`/expiry`, `/history`, `/settings`** 미구현 — 홈의 할 일 배너가 `/expiry`로 링크되어 있어 지금은 404
 - **재고 조정(실사)** — 자사창고는 로트별 실물 카운트, 풀필먼트는 "수치 반영"으로 성격이 다르다 (M7)
 - **QA 체크리스트** — `docs/07-plan.md` 2절. 한글 IME, 긴 상품명, 동시 출고 등 미검증
-- **PR 진입 기준 미정** — ⓐ 보호 영역만 PR *(추천)* ⓑ 전부 PR ⓒ 지금처럼 전부 직접 푸시.
-  `ssot.md §6` 은 "승인은 PR 리뷰에서 한다" 인데 실무는 직접 푸시라 **문서와 어긋나 있다**
-- **`NEED_HUMAN · 환경` 태그 미정** — CI 에서만 실패하고 로컬에서 재현되지 않을 때 쓸 이유 태그
-- **`protected-areas` 를 `push` 에서도 돌릴지 미정** — 직접 푸시를 허용한다면 사후 경고라도 남아야 한다
+
+하네스 미결 3건은 모두 닫혔다 — PR 진입 기준은 **회차를 쓰는 변경만 PR**
+([loop.md §6](harness/loop.md)), `NEED_HUMAN · 환경` 은 여섯 이유 중 하나로 확정
+([loop.md §4](harness/loop.md)), `protected-areas` 의 `push` 트리거는 기각(4절).
 
 ---
 
