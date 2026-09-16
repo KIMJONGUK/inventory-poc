@@ -19,6 +19,7 @@
 | 데이터 모델 · 코드 위치 · 트랜잭션 · 동시성 | `docs/06-architecture.md` | HANDOVER → 01-requirements |
 | UI 스펙 · 색 · 컴포넌트 · 반응형 | `docs/05-design.md` | 03-scenarios |
 | 검증 · 테스트 · CI · 무엇이 자동으로 지켜지나 | `docs/harness/verification.md` | 07-plan §2 → 06-architecture §9 |
+| 재시도 한도 · 언제 멈추나 · 세션 끊김 복구 | `docs/harness/loop.md` | ssot §7 → verification |
 | 무엇부터 구현 · 마일스톤 · QA 순서 | `docs/07-plan.md` | 01-requirements §7 |
 | 이미 정해진 것 · 왜 이 방향인가 · 함정 | `docs/HANDOVER.md` | 06-architecture |
 | 사용자가 누구 · 왜 이 기능이 필요한가 | `docs/02-personas.md` | 04-engagement |
