@@ -73,6 +73,18 @@ Next.js 16 (App Router) · TypeScript · Prisma 7 + SQLite · Tailwind CSS 4 · 
 - 인증: 자체 세션 쿠키 (jose JWT + bcryptjs)
 - DB는 `prisma/dev.db` 파일 하나. 커밋하지 않는다(마이그레이션과 시드로 재현)
 
+## 작업을 요청하려면
+
+**입구는 Issue 하나다.** [요청 템플릿](.github/ISSUE_TEMPLATE/maintenance.md)에 계약 6개 항목을 적거나,
+쓰기 어려우면 그냥 평소말로 요청하면 된다 — 에이전트가 같은 모양으로 초안을 만들어 `[초안]` 으로 열고,
+**확정은 사람이 한다.** 6개가 차야 구현 루프가 열리고, 회차를 다 쓰면 멈춰서 되묻는다.
+
+| 파일 | 내용 |
+|---|---|
+| [docs/harness/ssot.md](docs/harness/ssot.md) | 요구사항·아키텍처 핵심 판단표 · 계약 6개 항목 · 보호 영역 |
+| [docs/harness/loop.md](docs/harness/loop.md) | 구현 루프 — 상한 · 회차 · 멈춤선 · 제출과 CI |
+| [docs/harness/verification.md](docs/harness/verification.md) | `npm run verify` 가 무엇을 보장하나 |
+
 ## 문서
 
 | 파일 | 내용 |
