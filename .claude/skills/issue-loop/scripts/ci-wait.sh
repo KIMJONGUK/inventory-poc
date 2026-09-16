@@ -36,7 +36,8 @@ gh run view "$id" --json url,jobs --jq '"링크: \(.url)", (.jobs[] | "  \(.conc
 # 탭 앞 접두와 group 블록을 먼저 걷어내고 실제 출력만 본다.
 pid="$(gh run view "$id" --json jobs --jq '.jobs[] | select(.name=="protected-areas") | .databaseId')"
 if [ -n "$pid" ]; then
-  out="$(gh run view "$id" --job "$pid" --log 2>/dev/null     | tr -d ''     | awk '/##\[group\]/{skip=1} /##\[endgroup\]/{skip=0;next} !skip'     | sed -E 's/^.*	//; s/^[^ ]*Z //')"
+  out="$(gh run view "$id" --job "$pid" --log 2>/dev/null     | tr -d '
+'     | awk '/##\[group\]/{skip=1} /##\[endgroup\]/{skip=0;next} !skip'     | sed -E 's/^.*	//; s/^[^ ]*Z //')"
   if printf '%s
 ' "$out" | grep -q '보호 영역이 변경되었습니다'; then
     echo
@@ -49,7 +50,8 @@ fi
 case "$conclusion" in
   success)
     echo
-    echo "→ ⑥-b LLM review 로 간다 (별도 컨텍스트 · CI 통과 1건당 한 번)."
+    echo "→ 루프 안이면 ⑥-b LLM review 로 간다 (별도 컨텍스트 · CI 통과 1건당 한 번)."
+    echo "  루프 밖 변경(문서·하니스·도구)이면 여기서 끝이다 — 리뷰할 계약 3번 네 줄이 없다. 사람 리뷰로 넘긴다."
     exit 0 ;;
   cancelled|skipped)
     echo
