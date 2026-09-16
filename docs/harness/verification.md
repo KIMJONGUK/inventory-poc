@@ -24,7 +24,7 @@
 | Prepare | `verify:prepare` | 매번 같은 시드에서 출발 (재고 1194 · 이동 59) |
 | Types | `typecheck` | `tsc --noEmit` |
 | Lint | `lint` | `eslint` |
-| Test | `test` | `vitest run` 19건 |
+| Test | `test` | `vitest run` (건수는 §3) |
 | Build | `build` | `prisma generate` + `next build` |
 
 ---
@@ -42,13 +42,16 @@
 
 ---
 
-## 3. 자동 테스트 (19건, 순차 실행)
+## 3. 자동 테스트 (22건, 순차 실행)
+
+**건수의 원본은 이 표다** — 다른 문서는 숫자를 적지 않고 여기를 가리킨다. 숫자는 썩는다.
 
 | 파일 | 건수 | 지키는 것 |
 |---|---|---|
 | `fefo.test.ts` | 8 | 출고는 임박분(FEFO), 발송은 넉넉분(LEFO) — 같은 재고를 정반대로 고른다 |
 | `stock-invariant.test.ts` | 6 | 거점 이동은 총량 불변 · 초과 출고는 전부 롤백 · `Lot` = `Movement` 합계 |
 | `popup-settle.test.ts` | 5 | 누적 반출 기준 역산 · 되돌리면 재고 복귀 · 반출보다 많이 못 돌아옴 |
+| `popup-plan-stock.test.ts` | 3 | 반출서 저장은 재고를 움직이지 않는다 · 모자라면 부족분을 알려준다 |
 
 ---
 
