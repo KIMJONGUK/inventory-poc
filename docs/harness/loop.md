@@ -26,31 +26,59 @@
 
 ```mermaid
 flowchart TD
-    I([① Issue 접수 · 계약 6개 항목]) --> A([② 수행 시작 · 상한 N 확정<br/>댓글 루프 시작 0 슬래시 N])
-    A --> C[③ 구현 — 코드만 고친다]
-    C --> B{보호 영역 · 종료 조건 ·<br/>테스트 기대값을 고쳐야 하나}
-    B -- 그렇다 --> HB[NEED_HUMAN · 경계]
-    B -- 아니다 --> V[/④ npm run verify · 회차 n+1/]
-    V -- 실패 --> R{같은 단계 · 같은 원인<br/>2회 연속}
-    R -- 그렇다 --> HR[NEED_HUMAN · 반복]
-    R -- 아니다 --> L{n 이 N 에 닿았나}
+    subgraph OPEN["👤 사람 — 기준을 정한다"]
+        direction TB
+        I([① Issue 접수 · 계약 6개 항목]) --> A([② 수행 시작 · 상한 N 확정<br/>댓글 「루프 시작 0 슬래시 N」])
+    end
+
+    subgraph AI["🤖 AI — 행동을 정한다"]
+        direction TB
+        C[③ 구현 — 코드만 고친다] --> B{보호 영역 · 종료 조건 ·<br/>테스트 기대값을 고쳐야 하나}
+        R{같은 단계 · 같은 원인<br/>2회 연속}
+        L{n 이 N 에 닿았나}
+        P[⑤ PR 열기 · 제출 자격]
+    end
+
+    subgraph MACHINE["⚙️ 기계 — 사실을 정한다"]
+        direction TB
+        V[/④ npm run verify · 회차 n+1/]
+        CI[/⑥ CI verify · 다른 환경/]
+    end
+
+    subgraph CLOSE["👤 사람 — 승인과 판단"]
+        direction TB
+        M([⑦ 머지 = 루프 종료]) --> Z([⑧ 이슈 닫기 · 루프 n 슬래시 N 사용])
+        X([루프 밖 · 차감 없이 종료<br/>사람이 이슈를 닫는다<br/>재개는 새 Issue · 새 PR])
+        W[NEED_HUMAN 대기<br/>이슈 댓글 + need-human 라벨<br/>사람 답변으로만 해제]
+    end
+
+    A --> C
+    B -- 그렇다 · 경계 --> W
+    B -- 아니다 --> V
+    V -- 실패 --> R
+    R -- 그렇다 · 반복 --> W
+    R -- 아니다 --> L
     L -- 아니다 --> C
-    L -- 그렇다 --> HS[중단 · NEED_HUMAN · 소진]
-    V -- 통과 --> P[⑤ PR 열기 · 제출 자격]
-    P --> CI[/⑥ CI verify — 다른 환경/]
-    CI -- ① 머지<br/>통과 · 사람 승인 --> M([⑦ 머지 = 루프 종료])
-    M --> Z([⑧ 이슈 닫기 · 루프 n 슬래시 N 사용])
+    L -- 그렇다 · 소진 · 중단 --> W
+    V -- 통과 --> P
+    P --> CI
+    CI -- ① 머지<br/>통과 · 사람 승인 --> M
     CI -- ② 다시 구현<br/>실패 재현됨 · 요구사항대로 안 됐다 --> C
-    CI -- ③ 사람 판단<br/>요구사항을 바꾼다 --> X([루프 밖 · 차감 없이 종료<br/>사람이 이슈를 닫는다<br/>재개는 새 Issue · 새 PR])
-    CI -- ③ 사람 판단<br/>CI 만 실패 · 로컬 재현 안 됨 --> HE[NEED_HUMAN · 환경]
-    HB --> W
-    HR --> W
-    HE --> W
-    HS --> W[이슈 댓글 + need-human 라벨<br/>사람 답변으로만 해제]
+    CI -- ③ 사람 판단<br/>요구사항을 바꾼다 --> X
+    CI -- ③ 사람 판단<br/>CI 만 실패 · 재현 안 됨 · 환경 --> W
     W -. 경계 → 0 회차 .-> C
     W -. 반복 · 환경 → 쓰던 회차 .-> C
     W -. 소진 → 계약을 고치고 새 상한 .-> I
+
+    style OPEN fill:#eef2ff,stroke:#6366f1,stroke-width:2px
+    style CLOSE fill:#eef2ff,stroke:#6366f1,stroke-width:2px
+    style AI fill:#fff7ed,stroke:#ea580c,stroke-width:2px
+    style MACHINE fill:#f0fdf4,stroke:#16a34a,stroke-width:2px
 ```
+
+**세 영역이 정하는 것** — 사람은 **기준**(종료 조건 · 상한 · 승인), 기계는 **사실**(통과인가 아닌가),
+AI 는 **행동**(무엇을 고치고 언제 넘길까). AI 가 기준을 건드리면 완료를 자기가 정의하는 것이고,
+사실을 건드리면(`--no-verify` · CI 재실행) 판정을 자기가 하는 것이다.
 
 **세션이 끊기면** — 남는 것은 Issue 와 git 뿐이다. `n / N` 은 댓글에서 복원한다 (§5).
 
