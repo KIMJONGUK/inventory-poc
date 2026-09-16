@@ -151,6 +151,58 @@ export async function getExpiryCounts() {
   return { soon, expired }
 }
 
+/** 임박·만료 로트 한 줄 (F9 목록) */
+export type ExpiringLot = {
+  lotId: number
+  productId: number
+  sku: string
+  productName: string
+  unit: string
+  locationName: string
+  expiryDate: Date
+  quantity: number
+  status: Exclude<ExpiryStatus, 'OK'>
+}
+
+/**
+ * 임박·만료 로트 목록 (F9).
+ * 만료가 임박보다 먼저 온다 — 할 일 배너에서 들어오는 화면이라 급한 것이 위다.
+ * 경고 기준일은 상품마다 다르므로 로트별로 expiryStatus() 에 물어본다.
+ */
+export async function getExpiringLots(): Promise<ExpiringLot[]> {
+  const lots = await db.lot.findMany({
+    where: { quantity: { gt: 0 } },
+    include: { product: true, location: true },
+  })
+
+  const RANK = { EXPIRED: 0, SOON: 1 } as const
+
+  return lots
+    .flatMap((l) => {
+      const status = expiryStatus(l.expiryDate, l.product.expiryAlertDays)
+      if (status === 'OK') return []
+      return [
+        {
+          lotId: l.id,
+          productId: l.productId,
+          sku: l.product.sku,
+          productName: l.product.name,
+          unit: l.product.unit,
+          locationName: l.location.name,
+          expiryDate: l.expiryDate,
+          quantity: l.quantity,
+          status,
+        },
+      ]
+    })
+    .sort(
+      (a, b) =>
+        RANK[a.status] - RANK[b.status] ||
+        a.expiryDate.getTime() - b.expiryDate.getTime() ||
+        a.productName.localeCompare(b.productName)
+    )
+}
+
 export async function getLocations() {
   return db.location.findMany({
     where: { isActive: true, type: { notIn: [LOCATION_TYPES.DISPOSAL] } },
