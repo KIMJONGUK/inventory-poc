@@ -56,10 +56,13 @@ jobs:
         run: |
           set -euo pipefail
 
+          # 파일 하나 또는 디렉터리 접두 — 디렉터리를 적으면 그 아래 전부가 보호된다
           PROTECTED='
           docs/01-requirements.md
           docs/06-architecture.md
-          docs/harness/ssot.md
+          docs/harness
+          .github/ISSUE_TEMPLATE
+          .github/pull_request_template.md
           AGENTS.md
           CLAUDE.md
           .github/workflows/verify.yml
@@ -71,11 +74,17 @@ jobs:
           changed=$(git diff --name-only "$base" HEAD)
 
           hits=''
-          for path in $PROTECTED; do
-            if printf '%s\n' "$changed" | grep -qxF "$path"; then
-              hits="$hits  - $path"$'\n'
-            fi
-          done
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            for path in $PROTECTED; do
+              case "$file" in
+                "$path"|"$path"/*)
+                  hits="$hits  - $file"$'\n'
+                  break
+                  ;;
+              esac
+            done
+          done <<< "$changed"
 
           if [ -z "$hits" ]; then
             echo "보호 영역 변경 없음"
