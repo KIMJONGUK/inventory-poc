@@ -1,7 +1,7 @@
 import type { Prisma } from '@/generated/prisma/client'
 import { db } from './db'
 import { applyMovement, reverseMovement } from './stock'
-import { MOVEMENT_TYPES, POPUP_STATUS, REASON_CODES } from './constants'
+import { LOCATION_TYPES, MOVEMENT_TYPES, POPUP_STATUS, REASON_CODES } from './constants'
 import { dateOnly } from './date'
 
 /**
@@ -21,6 +21,42 @@ type MovementLike = {
   quantity: number
   fromLocationId: number | null
   toLocationId: number | null
+}
+
+export type CreatePopupInput = {
+  name: string
+  startDate: Date
+  endDate: Date
+  sourceLocationId: number
+  planLines: { productId: number; plannedQty: number }[]
+}
+
+/**
+ * 반출서 만들기 (S6) — 전용 거점과 계획만 만든다.
+ *
+ * ★ 여기서 재고는 1개도 움직이지 않는다. `applyMovement` 를 부르지 않는 것이 규칙이다.
+ * 실제 차감은 반출 확정(POPUP_OUT)이 한다.
+ */
+export async function createPopupTx(tx: Prisma.TransactionClient, input: CreatePopupInput) {
+  const location = await tx.location.create({
+    data: { name: input.name, type: LOCATION_TYPES.POPUP },
+  })
+  const popup = await tx.popup.create({
+    data: {
+      name: input.name,
+      status: POPUP_STATUS.PREP,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      locationId: location.id,
+      sourceLocationId: input.sourceLocationId,
+    },
+  })
+  for (const line of input.planLines.filter((l) => l.plannedQty > 0)) {
+    await tx.popupPlan.create({
+      data: { popupId: popup.id, productId: line.productId, plannedQty: line.plannedQty },
+    })
+  }
+  return popup.id
 }
 
 /** 취소된 기록과 그 상쇄 기록은 계산에서 빼야 숫자가 맞는다 (F10) */

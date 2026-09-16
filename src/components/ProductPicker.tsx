@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 export type PickProduct = { id: number; name: string; sku: string; unit: string }
 
@@ -9,10 +9,13 @@ export function ProductPicker({
   products,
   onPick,
   title,
+  info,
 }: {
   products: PickProduct[]
   onPick: (p: PickProduct) => void
   title: string
+  /** 줄 오른쪽에 덧붙일 것 (예: 보유 수량) */
+  info?: (p: PickProduct) => ReactNode
 }) {
   const [q, setQ] = useState('')
   const list = q
@@ -38,7 +41,7 @@ export function ProductPicker({
               className="flex w-full items-center justify-between border-b border-line px-4 py-3 text-left active:bg-dim"
             >
               <span className="text-[13px] font-bold">{p.name}</span>
-              <span className="text-[10.5px] text-sub">{p.sku}</span>
+              <span className="text-[10.5px] text-sub">{info ? info(p) : p.sku}</span>
             </button>
           </li>
         ))}

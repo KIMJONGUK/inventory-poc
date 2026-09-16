@@ -31,3 +31,13 @@
 - **요구사항·아키텍처를 바꿔야 함** → AI는 읽기만. **변경은 사람 승인** (SSOT §보호 영역)
 - **SSOT에 "미정"으로 적힌 항목** → 임의로 정하지 않는다
 - **라우팅 표에 없는 질문** → 어느 영역인지 사람에게 먼저 확인한다
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

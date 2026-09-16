@@ -2,6 +2,7 @@ import { db } from './db'
 import { addDays, dateOnly, daysUntil, today } from './date'
 import { expiryStatus, type ExpiryStatus } from './expiry'
 import { AVAILABLE_LOCATION_TYPES, LOCATION_TYPES, TRANSIT_DELAY_DAYS } from './constants'
+import { planStockKey, type PlanStock } from './plan-stock'
 
 /** 재고 목록 한 줄에 필요한 것 (05-design 4.4) */
 export type StockRowData = {
@@ -333,4 +334,24 @@ export async function getFulfillmentSheet(locationId: number) {
     (a, b) => Number(b.recent) - Number(a.recent) || a.name.localeCompare(b.name, 'ko')
   )
   return { location, rows }
+}
+
+/**
+ * 반출서 작성 화면에 보여줄 가용 재고 (S6) — 그 거점 로트 수량의 단순 합.
+ *
+ * 다른 팝업의 계획분은 빼지 않는다. 반출서는 계획이고 재고는 1개도 움직이지 않는다.
+ * 실제 차감은 반출 확정이 한다 — 계획 단계에서 미리 묶어두면 두 반출서가 서로를 굶긴다.
+ */
+export async function getPlanStock(locationIds: number[]): Promise<PlanStock> {
+  if (locationIds.length === 0) return {}
+  const lots = await db.lot.findMany({
+    where: { locationId: { in: locationIds }, quantity: { gt: 0 } },
+    select: { locationId: true, productId: true, quantity: true },
+  })
+  const stock: PlanStock = {}
+  for (const lot of lots) {
+    const key = planStockKey(lot.locationId, lot.productId)
+    stock[key] = (stock[key] ?? 0) + lot.quantity
+  }
+  return stock
 }

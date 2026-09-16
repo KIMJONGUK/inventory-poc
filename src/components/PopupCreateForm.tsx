@@ -8,6 +8,7 @@ import { ProductPicker, type PickProduct } from './ProductPicker'
 import { PickerRow } from './PickerRow'
 import { Qty } from './Qty'
 import { createPopup } from '@/actions/popup'
+import { planStockKey, type PlanStock } from '@/lib/plan-stock'
 
 /**
  * 팝업 만들기 + 반출서 (S6) — P2(영업)가 행사 며칠 전에 쓰는 화면.
@@ -16,10 +17,13 @@ import { createPopup } from '@/actions/popup'
 export function PopupCreateForm({
   products,
   sources,
+  stock,
   today,
 }: {
   products: PickProduct[]
   sources: { id: number; name: string }[]
+  /** 가져가는 곳별 현재 가용 재고 — 거점을 바꾸면 보이는 숫자도 바뀐다 */
+  stock: PlanStock
   today: string // YYYY-MM-DD
 }) {
   const router = useRouter()
@@ -33,6 +37,10 @@ export function PopupCreateForm({
   const [qty, setQty] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+
+  const sourceName = sources.find((s) => String(s.id) === sourceId)?.name ?? ''
+  /** 지금 고른 거점의 보유 수량. 다른 거점 재고는 섞지 않는다 */
+  const stockOf = (productId: number) => stock[planStockKey(Number(sourceId), productId)] ?? 0
 
   const submit = async () => {
     setPending(true)
@@ -59,16 +67,31 @@ export function PopupCreateForm({
           </button>
         </header>
         {!current ? (
-          <ProductPicker products={products} onPick={setCurrent} title="상품 검색" />
+          <ProductPicker
+            products={products}
+            onPick={setCurrent}
+            title="상품 검색"
+            info={(p) => `보유 ${stockOf(p.id).toLocaleString()}${p.unit}`}
+          />
         ) : (
           <>
             <div className="mx-4 mt-3 rounded-xl border border-acc-line bg-acc-soft px-3.5 py-2.5 text-[13px] font-bold text-acc">
               🦴 {current.name}
             </div>
             <div className="mx-4 mt-3">
-              <label className="mb-1 block text-[10.5px] text-sub">가져갈 예정 수량</label>
+              <label className="mb-1 block text-[10.5px] text-sub">
+                가져갈 예정 수량 · {sourceName} 보유{' '}
+                <b className="tnum">{stockOf(current.id).toLocaleString()}</b>
+                {current.unit}
+              </label>
               <QtyInput autoFocus value={qty} onChange={setQty} unit={current.unit} />
             </div>
+            {Number(qty) > stockOf(current.id) && (
+              <p className="mx-4 mt-2 rounded-xl bg-amber-bg px-3.5 py-2.5 text-[11.5px] font-bold text-amber">
+                보유보다 {(Number(qty) - stockOf(current.id)).toLocaleString()}
+                {current.unit} 많습니다. 반출서는 계획이라 담을 수는 있습니다
+              </p>
+            )}
             <div className="fixed inset-x-0 bottom-0 mx-auto max-w-[560px] border-t border-line bg-white p-3 lg:max-w-[960px]">
               <button
                 onClick={() => {
@@ -149,7 +172,19 @@ export function PopupCreateForm({
       ) : (
         lines.map((l, i) => (
           <div key={i} className="flex items-center justify-between border-b border-line px-4 py-3">
-            <p className="text-[13px] font-bold">{l.product.name}</p>
+            <div>
+              <p className="text-[13px] font-bold">{l.product.name}</p>
+              <p
+                className={`mt-0.5 text-[10.5px] ${
+                  l.qty > stockOf(l.product.id) ? 'font-bold text-amber' : 'text-sub'
+                }`}
+              >
+                보유 {stockOf(l.product.id).toLocaleString()}
+                {l.product.unit}
+                {l.qty > stockOf(l.product.id) &&
+                  ` · ${(l.qty - stockOf(l.product.id)).toLocaleString()}${l.product.unit} 모자람`}
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <Qty value={l.qty} unit={l.product.unit} size="md" />
               <button
